@@ -1,61 +1,51 @@
-// === CONFIGURACIÓN ===
-const cloudName = 'drkkjp6za';   // tu Cloud Name
-const uploadPreset = 'galeria';  // tu Upload Preset unsigned
-
+// === CONFIG ===
+const cloudName = 'drkkjp6za';     // tu Cloud Name
+const uploadPreset = 'galeria';    // tu preset unsigned
 const gallery = document.getElementById('gallery');
 
-// Cargar fotos existentes (requiere tener activado "Resource lists" en Cloudinary)
-async function loadGallery() {
+// Utilidad: crear tarjeta de imagen
+function createCard(url){
+  const fig = document.createElement('figure');
+  const img = document.createElement('img');
+  img.src = url; img.alt = 'Recuerdo';
+  fig.appendChild(img);
+  return fig;
+}
+
+// Cargar imágenes existentes por TAG (requiere "Resource lists" habilitado en Cloudinary)
+async function loadGallery(){
   try {
     const res = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/galeria.json`);
-    if (!res.ok) return console.log("Aún no hay lista pública disponible.");
+    if (!res.ok) return console.log("Aún no hay fotos en la galería.");
     const data = await res.json();
-    gallery.innerHTML = "";
-    data.resources.forEach(img => {
-      const imageUrl = img.secure_url || `https://res.cloudinary.com/${cloudName}/image/upload/${img.public_id}.${img.format}`;
-      const image = document.createElement("img");
-      image.src = imageUrl;
-      image.alt = "Recuerdo";
-      image.style.width = "250px";
-      image.style.margin = "10px";
-      image.style.borderRadius = "10px";
-      image.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
-      gallery.appendChild(image);
+    gallery.innerHTML = ''; // Limpiar galería
+    data.resources.forEach(r => {
+      const url = r.secure_url || `https://res.cloudinary.com/${cloudName}/image/upload/${r.public_id}.${r.format}`;
+      gallery.appendChild(createCard(url));
     });
   } catch (err) {
-    console.error("Error al cargar galería:", err);
+    console.warn('Error al cargar la galería:', err);
   }
 }
 
-// === WIDGET DE SUBIDA ===
-const uploadWidget = cloudinary.createUploadWidget({
-  cloudName: cloudName,
-  uploadPreset: uploadPreset,
-  folder: "galeria-recuerdos",
-  tags: ["galeria"],  // importante para listarlas luego
+// Upload Widget de Cloudinary
+const widget = cloudinary.createUploadWidget({
+  cloudName, uploadPreset,
+  folder: 'galeria-recuerdos',
+  tags: ['galeria'],
   multiple: true,
-  sources: ["local", "camera", "url"],
-  maxFileSize: 5000000, // 5 MB
-  clientAllowedFormats: ["jpg", "jpeg", "png", "webp"]
+  sources: ['local', 'camera', 'url'],
+  maxFileSize: 6 * 1024 * 1024,  // 6 MB
+  clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp']
 }, (error, result) => {
-  if (!error && result && result.event === "success") {
-    console.log("Imagen subida:", result.info.secure_url);
-    const image = document.createElement("img");
-    image.src = result.info.secure_url;
-    image.alt = "Nuevo recuerdo";
-    image.style.width = "250px";
-    image.style.margin = "10px";
-    image.style.borderRadius = "10px";
-    image.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
-    gallery.prepend(image);
+  if (!error && result && result.event === 'success') {
+    gallery.prepend(createCard(result.info.secure_url));  // Agregar la nueva imagen
   }
 });
 
-// === EVENTO DEL BOTÓN ===
-document.getElementById("uploadBtn").addEventListener("click", () => {
-  uploadWidget.open();
-}, false);
+// Abrir el widget cuando se haga clic en el botón
+document.getElementById('uploadBtn').addEventListener('click', () => widget.open());
 
-// === INICIALIZAR ===
+// Inicializar la galería
 loadGallery();
 
