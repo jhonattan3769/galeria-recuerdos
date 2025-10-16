@@ -1,32 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería de Recuerdos</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Galería de Recuerdos</title>
+
+  <!-- Fuentes elegantes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-    <header>
-        <h1>Galería de Recuerdos</h1>
-        <p>Compartiendo momentos especiales</p>
-    </header>
+  <header class="hero">
+    <div class="container">
+      <h1>Galería de Recuerdos</h1>
+      <p>Compartiendo momentos especiales</p>
+    </div>
+  </header>
 
-    
+  <main class="container">
+    <section class="actions">
+      <button id="uploadBtn" class="btn-primary">💖 Subir foto</button>
+    </section>
 
-    <script src="script.js"></script>
-    <!-- Botón para que cualquiera suba fotos -->
-<section class="upload-form" style="text-align:center;margin:20px 0;">
-  <button id="uploadBtn">Subir foto ❤️</button>
-</section>
+    <section class="gallery" id="gallery">
+      <!-- Las fotos se cargarán aquí -->
+    </section>
+  </main>
 
-<!-- Galería -->
-<section class="gallery" id="gallery"></section>
+  <footer class="site-footer">
+    <div class="container">© 2025 — Con cariño.</div>
+  </footer>
 
-<!-- Script del widget de Cloudinary -->
-<script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
-<script src="script.js"></script>
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" aria-hidden="true">
+    <button class="lightbox__close" aria-label="Cerrar">×</button>
+    <img id="lightboxImg" alt="Foto ampliada"/>
+  </div>
 
+  <!-- Cloudinary widget + JS -->
+  <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+  <script src="script.js"></script>
 </body>
 </html>
-
