@@ -108,3 +108,4 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
   backdrop-filter: blur(6px);
 }
 .lightbox__close:hover{background:rgba(255,255,255,.18)}
+
