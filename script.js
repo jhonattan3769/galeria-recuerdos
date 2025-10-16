@@ -1,80 +1,69 @@
-// === CONFIGURACIÓN ===
-const cloudName = 'drkkjp6za';     // tu Cloud Name
-const uploadPreset = 'galeria';    // tu preset unsigned
+/***** CONFIG *****/
+const cloudName   = 'drkkjp6za';   // <-- tu Cloud Name
+const uploadPreset = 'galeria';    // <-- tu Upload Preset (Unsigned)
+const TAG = 'galeria';             // <-- el tag que agregaste en el preset
 const gallery = document.getElementById('gallery');
 
-// Función para crear una tarjeta de imagen
+/***** HELPERS *****/
 function createCard(url){
   const fig = document.createElement('figure');
   const img = document.createElement('img');
   img.src = url;
   img.alt = 'Recuerdo';
-
-  // Añadir el evento de lightbox
-  img.addEventListener('click', () => openLightbox(url));
-  
   fig.appendChild(img);
   return fig;
 }
 
-// Cargar las fotos de Cloudinary
+/**
+ * Carga SIEMPRE las fotos guardadas en Cloudinary con el tag definido.
+ * Requiere en Cloudinary: Settings → Security → habilitar "Resource lists".
+ */
 async function loadGallery(){
   try {
-    const res = await fetch(`https://res.cloudinary.com/${cloudName}/image/list/galeria.json`);
-    if (!res.ok) return console.log("Aún no hay fotos.");
+    const listUrl = `https://res.cloudinary.com/${cloudName}/image/list/${TAG}.json?v=${Date.now()}`;
+    const res = await fetch(listUrl, { cache: 'no-store' });
+    if (!res.ok) {
+      console.log('No hay lista pública aún o falta habilitar "Resource lists".');
+      return;
+    }
     const data = await res.json();
-    gallery.innerHTML = '';  // Limpiar la galería antes de cargar nuevas imágenes
-    data.resources.forEach(r => {
-      const url = r.secure_url || `https://res.cloudinary.com/${cloudName}/image/upload/${r.public_id}.${r.format}`;
-      gallery.appendChild(createCard(url));
-    });
+    gallery.innerHTML = '';
+
+    // Opcional: ordenar más nuevas primero
+    (data.resources || [])
+      .sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))
+      .forEach(r => {
+        const url = r.secure_url || `https://res.cloudinary.com/${cloudName}/image/upload/${r.public_id}.${r.format}`;
+        gallery.appendChild(createCard(url));
+      });
   } catch (err) {
-    console.warn('Error al cargar las fotos:', err);
+    console.warn('Error al cargar la galería:', err);
   }
 }
 
-// Crear el widget de subida para Cloudinary
+/***** SUBIDA (widget Cloudinary) *****/
 const widget = cloudinary.createUploadWidget({
   cloudName,
-  uploadPreset,
+  uploadPreset,               // el preset ya añade el tag "galeria"
   folder: 'galeria-recuerdos',
-  tags: ['galeria'],
+  tags: [TAG],                // redundante pero útil si algún día cambias el preset
   multiple: true,
-  sources: ['local', 'camera', 'url'],
-  maxFileSize: 6 * 1024 * 1024, // 6 MB
-  clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp']
+  sources: ['local','camera','url'],
+  maxFileSize: 6 * 1024 * 1024,
+  clientAllowedFormats: ['jpg','jpeg','png','webp']
 }, (error, result) => {
   if (!error && result && result.event === 'success') {
-    // Cuando la foto es subida con éxito, la añadimos a la galería
-    gallery.prepend(createCard(result.info.secure_url)); // Añadir foto en la parte superior de la galería
+    // Mostrar de inmediato lo recién subido
+    gallery.prepend(createCard(result.info.secure_url));
+    // Y refrescar desde la lista para quedar en sync con Cloudinary/CDN
+    loadGallery();
   }
 });
 
-// Mostrar el widget al hacer clic en el botón
-document.getElementById('uploadBtn').addEventListener('click', () => widget.open());
+/***** UI *****/
+document.getElementById('uploadBtn')?.addEventListener('click', () => widget.open());
 
-// Lightbox: abre la imagen en tamaño grande
-function openLightbox(url) {
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightboxImg');
-  
-  lightboxImg.src = url;  // Asignar la imagen seleccionada
-  lightbox.classList.add('open');
-  lightbox.setAttribute('aria-hidden', 'false');
-}
-
-// Cerrar el lightbox
-const closeLightbox = () => {
-  const lightbox = document.getElementById('lightbox');
-  lightbox.classList.remove('open');
-  lightbox.setAttribute('aria-hidden', 'true');
-  document.getElementById('lightboxImg').src = '';  // Limpiar la imagen
-};
-document.querySelector('.lightbox__close').addEventListener('click', closeLightbox);
-document.getElementById('lightbox').addEventListener('click', e => {
-  if (e.target === document.getElementById('lightbox')) closeLightbox();
-});
-
-// Inicializar la galería (cargar imágenes ya subidas al sitio)
+/***** INIT: al abrir la página, leer lo que ya está guardado en Cloudinary *****/
 loadGallery();
+
 
